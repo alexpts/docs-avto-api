@@ -1,82 +1,137 @@
 FORMAT: 1A
 HOST: http://alexpts.apiblueprint.org/
 
-# API
+# AVTO API
 * RESTful JSON API, media type: `application/json`
 * Тело запроса: JSON
 * Даты: [ISO 8601](https://www.w3.org/TR/NOTE-datetime), формат: `2015-10-16T19:20:30+01:00`
 
+## Ошибки
 
-## Questions Collection [/questions]
+Пример ошибки:
 
-### List All Questions [GET]
+        HTTP/1.1 400 Bad Request
+        Content-Type: application/json
 
-+ Response 200 (application/json)
-
-        [
-            {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 2048
-                    }, {
-                        "choice": "Python",
-                        "votes": 1024
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 512
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 256
-                    }
-                ]
+        {
+            "status": 400,
+            "error": {
+                "code": "wrong_params",
+                "title": "Invalid limit value"
             }
-        ]
 
-### Create a New Question [POST]
+        }
 
-You may create your own question using this action. It takes a JSON
-object containing a question and a collection of answers in the
-form of choices.
+Язык текста в поле `title` зависит от заголовка `Accept-Language`, в документации поле опущено.
+
+
+## Версионирование
+
+Для версионирования используется префикс URL. Пример адреса: `https://some.api/v1/users`. В документации префикс опущен.
+
+## Локализация
+
+Локализация реализуется на сервере. Для определения языка текстовых ресурсов используется заголовок `Accept-Language`, [RFC 2616](http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.4). Язык по умолчанию: `en`.
+
+## Лимитер запросов
+
+Сервер может ограничивать клиентов в количестве запросов, отдавая ошибку с кодом `429`, [RFC 6585](https://tools.ietf.org/html/rfc6585#section-4).
+
+    HTTP/1.1 429 Too Many Requests
+    Content-Type: application/json
+
+    {
+        "status": 429,
+        "error": {
+            "code": "too_many_requests",
+            "title": "Попридержи коней"
+        }
+    }
+    
+# Group Словари
+
+## Термы [/terms{?taxonomyId}]
++ Parameters
+    + taxonomyId: 1 (number, optional) - id of taxonomy
+
++ Attributes (object)
+    + id: 1 (number, required)
+    + name: пост (string, required)
+    + slug: post (string, optional)
+    + parentId: 0 (number, required)
+    + description: пост в блог (string, required)
+    + taxonomyId: 1 (number, required) - id of taxonomy type
+
+### Список термов [GET]
 
 + Request (application/json)
 
-        {
-            "question": "Favourite programming language?",
-            "choices": [
-                "Swift",
-                "Python",
-                "Objective-C",
-                "Ruby"
-            ]
-        }
-
-+ Response 201 (application/json)
-
-    + Headers
-
-            Location: /questions/2
-
-    + Body
-
+    + Schema
+        
             {
-                "question": "Favourite programming language?",
-                "published_at": "2015-08-05T08:40:51.620Z",
-                "choices": [
-                    {
-                        "choice": "Swift",
-                        "votes": 0
-                    }, {
-                        "choice": "Python",
-                        "votes": 0
-                    }, {
-                        "choice": "Objective-C",
-                        "votes": 0
-                    }, {
-                        "choice": "Ruby",
-                        "votes": 0
+                "$schema": "http://json-schema.org/draft-04/schema#",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "number",
                     }
-                ]
+                }
             }
+            
++ Response 200 (application/json)
+    + Attributes (object)
+        + data (array[Термы])
+        
+# Group Пользоватли
+
+## Пользователи [/users]
+
++ Attributes (object)
+    + id: 56c04643569e85d50220b573 (string, required)
+    + login: login (string, required)
+    + email: login@mail.com (string, optional)
+    + pass: none (string, optional)
+    + status: 0 (enum, optional)
+        + 1 (number) - activated
+        + 2 (number) - wait activate
+        + 3 (number) - disabled
+        + 4 (number) - deleted
+    + creAt: `2016-12-16T11:10:00Z` (string)
+    + activKey: A393D8df4 (string, optional) - код активации
+    + roleIds (array[string], optional)
+        + `56c04643569e85d50220b573`
+        + `56c04643569e85d50220b574`
+    
+### Список [GET]
++ Response 200 (application/json)
+    + Attributes (object)
+        + data (array[Пользователи])
+        
+### По id [GET /users/{id}]
++ Parameters
+    + id: 56c04643569e85d50220b573 (string)
+    
++ Response 200 (application/json)
+    + Attributes (object)
+        + data (Пользователи)
+        
+### Создать [POST]
+
++ login: login (string, required)
++ password: password (string, required)
++ email: email (string, required)
+   
++ Request (application/json)
+
+        {
+            "login": "login",
+            "password": "password",
+            "email": "email"
+        }
+        
+        
++ Response 200 (application/json)
+    + Attributes (object)
+        + data (Пользователи)
+        
+###
